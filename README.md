@@ -13,7 +13,7 @@ PlayStation 4/5 (port 33749) -> GT7Proxy (port 33740)
 ## Running the capture
 
 All tracks are referenced [here](https://github.com/ddm999/gt7info/blob/web-new/_data/db/course.csv)
-The --track parameter should reflect the track ID you will be using to capture telemetry data.
+The **--track** parameter should reflect the track ID you will be using to capture telemetry data.
 
 ```
 usage: GT7Map2CSV.py [-h] --ps_ip PS_IP [--logpackets LOGPACKETS] --track TRACK
@@ -30,3 +30,6 @@ options:
                         new/_data/db/course.csv
 ```
 
+The dumps directory of this repository contains csv files with track ID as the name.
+
+More information can also be found on the great GTPlanet forum from [here](https://www.gtplanet.net/forum/threads/gt7-is-compatible-with-motion-rig.410728/post-13917994) 
