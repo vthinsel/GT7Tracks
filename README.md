@@ -4,8 +4,8 @@
 ## Introduction
 
 This repository contains a Gran Turismo 7 app used to capture telemetry data as it is received, in a .csv file.
-It was initially made to capture car position x/z/y in order to learn tracks coordinates for further automatic recognition of the track using ML/AI.
-
+It is initially made to capture car position x/z/y in order to learn tracks coordinates for further automatic recognition of the track using ML/AI.
+Track dumps also contain speed/rpm, but can be easily updated to include any native telemetry data.
 ``
 PlayStation 4/5 (port 33749) -> GT7Proxy (port 33740)
 ``

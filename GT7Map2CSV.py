@@ -5,9 +5,10 @@ import pickle
 import signal
 import socket
 import sys
-import granturismo
+
 import matplotlib.pyplot as plt
 from salsa20 import Salsa20_xor
+
 from gt_packet_definition import GTDataPacket
 
 # ansi prefix
@@ -28,7 +29,6 @@ sys.stdout.write(f'{pref}?1049h')  # alt buffer
 sys.stdout.write(f'{pref}?25l')  # hide cursor
 sys.stdout.flush()
 
-lst = granturismo.intake
 # ports for send and receive data
 SendPort = 33739
 ReceivePort = 33740
