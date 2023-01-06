@@ -1,0 +1,8 @@
+None
+{0: 'Brands Hatch Grand Prix Circuit', 1: 'Brands Hatch Indy Circuit', 2: 'Dragon Trail - Seaside', 3: 'Daytona Tri-Oval', 4: 'Fuji International Speedway (Short)'}
+1/1 [==============================] - 0s 64ms/step
+
+None
+{'0': 'Brands Hatch Grand Prix Circuit', '1': 'Brands Hatch Indy Circuit', '2': 'Dragon Trail - Seaside', '3': 'Daytona Tri-Oval', '4': 'Fuji International Speedway (Short)'}
+1/1 [==============================] - 0s 107ms/step
+Points from various tracks:
