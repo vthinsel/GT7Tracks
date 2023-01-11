@@ -11,13 +11,13 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import RobustScaler
 
 
-def createmodel():
+def createmodel(num_outputs,units):
     newmodel = tf.keras.Sequential([
         tf.keras.Input(shape=(3,)),
         tf.keras.layers.Dense(units=3, activation=tf.nn.relu),
         # tf.keras.layers.Dropout(rate=0.2),
-        tf.keras.layers.Dense(units=128, activation=tf.nn.relu),
-        tf.keras.layers.Dense(units=len(tracks_id), activation=tf.nn.softmax)
+        tf.keras.layers.Dense(units=units, activation=tf.nn.relu),
+        tf.keras.layers.Dense(units=num_outputs, activation=tf.nn.softmax)
     ])
     newmodel.compile(
         optimizer=tf.optimizers.Adam(),
@@ -72,18 +72,17 @@ args = parser.parse_args()
 
 # path = r'C:\Users\Vince\OneDrive\Loisirs\SimRacing\SimTools\GT7\GT7Tracks\dumps'
 
-if args.refreshcsv:
-    trackdefinitionurl = "https://raw.githubusercontent.com/ddm999/gt7info/web-new/_data/db/course.csv"
-    print(f"Updating csv file from {trackdefinitionurl} for tracks definition")
-    tracksdef = pd.read_csv(trackdefinitionurl)
-    tracksdef.to_csv("track_list.csv", index=False, decimal=".", sep=",")
-else:
-    print("Using local CSV file for tracks definition")
-    tracksdef = pd.read_csv("track_list.csv")
-    # track name of track ID 1240: trackdef[trackdef["ID"] == 1240]['Name'].values[0]
-print(f"Tracks definition:\n{tracksdef.head()}\n Tracks shape: {tracksdef.shape}")
-
 if args.mode == "train":
+    if args.refreshcsv:
+        trackdefinitionurl = "https://raw.githubusercontent.com/ddm999/gt7info/web-new/_data/db/course.csv"
+        print(f"Updating csv file from {trackdefinitionurl} for tracks definition")
+        tracksdef = pd.read_csv(trackdefinitionurl)
+        tracksdef.to_csv("track_list.csv", index=False, decimal=".", sep=",")
+    else:
+        print("Using local CSV file for tracks definition")
+        tracksdef = pd.read_csv("track_list.csv")
+        # track name of track ID 1240: trackdef[trackdef["ID"] == 1240]['Name'].values[0]
+    print(f"Tracks definition:\n{tracksdef.head()}\n Tracks shape: {tracksdef.shape}")
     all_files = glob.glob(os.path.join(args.folder, "*.csv"))
     tracks_array = []
     plt.title('Tracks from each files - 1 color per file')
@@ -112,20 +111,12 @@ if args.mode == "train":
     frame = pd.concat(tracks_array, axis=0, ignore_index=True)
     frame.drop({'speed', 'rpm'}, axis=1, inplace=True)
     frame.to_csv('tracks_concatenated.csv', index=False, decimal=".", sep=",")
-    # tracks_data = pd.get_dummies(frame, columns=["track_id"], drop_first=False)
-    # print(f"tracks_data columns: {tracks_data.columns}")
-    # print(f"tracks_data shape: {tracks_data.shape}")
-    # tracks_data.to_csv('tracks_cleaned.csv', index=False, decimal=".", sep=",")
-    # print(f"tracks_data shape: {tracks_data.shape}")
-
     y = frame['track_id']
     x = frame.drop("track_id", axis=1)
     # Normalize data
-    scaler = RobustScaler()
-    # fit and transform the data. We need to make a dataframe again after the sklearn normalization which returns a numpy array
-    x = pd.DataFrame(scaler.fit_transform(x), columns=x.columns)
-    print(f"Scaler factors: {scaler.scale_}")
-    # Use scaler.scale_ to transform input for prediction ?
+    #scaler = RobustScaler()
+    #x = pd.DataFrame(scaler.fit_transform(x), columns=x.columns)
+    #print(f"Scaler factors: {scaler.scale_}")
 
     # Replace output values with range 0..number of tracks
     val = 0
@@ -141,13 +132,12 @@ if args.mode == "train":
     print(f"frame head:\n{frame.head()}\nx_train head:\n{x_train.head()}\ny_train head:\n{y_train.head()}")
     print(
         f"frame shape: {frame.shape} x_train shape: {x_train.shape} y_train shape: {y_train.shape} unique_tracks: {len(tracks_id)}")
-
     # Plot to check after normalization
     plt.title('Tracks merged and normalized')
     plt.scatter(x['x'], x['z'], s=2)
     plt.show()
-    model = createmodel()
-    model.fit(x_train, y_train, epochs=30)
+    model = createmodel(len(tracks_id), 256)
+    model.fit(x_train, y_train, epochs=50)
     # Evaluate model
     print("Model Accuracy")
     print(model.evaluate(x_test, y_test, return_dict=True))
@@ -157,26 +147,8 @@ else:
     model = tf.keras.models.load_model(args.modelname)
     track_dict = load_trackdict('trackdict.json')
 
-print(model.summary())
-print(track_dict)
-sample_multipletracks = pd.DataFrame(np.array(
-    [
-        [0.0, 0.0, 0.0],
-        [-0.013608, 0.042855, 0.080122],
-        [-0.137124, -0.424976, -0.622008],
-        [0.1984, -0.12, 0],
-        [1.3, -0.65, -1.231429],  # between 3 tracks
-        [-1.0, 0.7, 0.5],
-        [0.1636, 0.0606, 0.5],
-        [2.5, 1.0, 0]  # dragon tail
-    ]),
-    columns=['x', 'z', 'y']
-)
-res = model.predict(sample_multipletracks)
-print(f"Points from various tracks:\n{res}")
-for row in res:
-    print(f"Track index is {np.argmax(row)} which is {row[np.argmax(row)] * 100}% {track_dict[str(np.argmax(row))]}")
-
+#print(model.summary())
+#print(track_dict)
 sample_singletracks = pd.DataFrame(np.array(
     [
         [-0.250120, -0.230890, -0.220905],  # 50/50
@@ -189,5 +161,35 @@ sample_singletracks = pd.DataFrame(np.array(
 res = model.predict(sample_singletracks)
 print(
     f"Points belonging to the same track:\n{res}")
+track_confidence = pd.DataFrame(columns=track_dict.values())
 for row in res:
-    print(f"Track index is {np.argmax(row)} which is {row[np.argmax(row)] * 100}% {track_dict[str(np.argmax(row))]}")
+    track_confidence.loc[len(track_confidence.index)] = row
+    print(f"Point Track index is {np.argmax(row)} which is {(row[np.argmax(row)]*100):.1f}% {track_dict[str(np.argmax(row))]}")
+print(f"{track_confidence}")
+
+#livetrack = pd.read_csv("dumps\\119.csv", index_col=None, header=0) #GP
+#livetrack = pd.read_csv("dumps\\346.csv", index_col=None, header=0) #Indy
+livetrack = pd.read_csv("dumps\\4.csv", index_col=None, header=0) #daytona
+#livetrack = pd.read_csv("dumps\\363.csv", index_col=None, header=0) #dragon tail
+#livetrack = pd.read_csv("dumps\\837.csv", index_col=None, header=0) # Fuji Intl
+
+livetrack.drop({'speed', 'rpm', 'track_id'}, axis=1, inplace=True)
+#livetrack.div({'x':425.1415081 , 'z':543.85843277 , 'y':12.19364524})
+print(livetrack.shape)
+print(livetrack.head())
+track_confidence = pd.DataFrame(columns=track_dict.values())
+candidate_track = ""
+res = model.predict(livetrack)
+for row in res:
+    track_confidence.loc[len(track_confidence.index)] = row
+    track_mean = track_confidence.mean(axis=0)
+    updated_candidate_track = track_mean.idxmax()
+    if candidate_track != updated_candidate_track:
+        candidate_track = updated_candidate_track
+        print(f"Track candidate : {candidate_track} with confidence {(track_mean.max()*100):.1f}% ")
+    #print(f"Point Track index is {np.argmax(row)} which is {(row[np.argmax(row)]*100):.1f}% {track_dict[str(np.argmax(row))]}")
+pd.options.display.float_format = '{:,.2f}'.format
+print(f"\nFinal Mean:\n {track_confidence.mean(axis=0)}")
+#print(f"\nMax:\n {track_confidence.max(axis=0)}")
+#print(f"\nMin:\n {track_confidence.min(axis=0)}")
+

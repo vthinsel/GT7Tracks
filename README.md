@@ -33,3 +33,21 @@ options:
 The dumps directory of this repository contains csv files with track ID as the name.
 
 More information can also be found on the great GTPlanet forum from [here](https://www.gtplanet.net/forum/threads/gt7-is-compatible-with-motion-rig.410728/post-13917994) 
+
+## Training the model
+
+Use LearnTrack.py to train and/or predict
+
+### Train
+LearnTrack can train a tensorflow model and save it for further prediction.
+As arguments, you can provide a folder containing the csv files to learn.
+Each csv must ba named with the track ID as defined in the track definition file which is available using option **--refreshcsv True**
+You can specify a modelname that will be saved in a folder. By default the model is saved in folder gt7.model
+
+### Predict
+in predict mode you can specify the model to load, which is gt7.model by default
+
+## Live guessing
+
+GT7TrackGuest is a simple tool used to guess the track you are running on. It requires the model name (gt7.model by default), the PS5 IP where GT7 is running.
+It needs to be restarted each time you change the track you are on as it doesn't detect new session.
