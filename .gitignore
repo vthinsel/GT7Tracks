@@ -6,6 +6,7 @@ main.py
 *.raw
 *.cap
 .idea
+tracks_concatenated.csv
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
