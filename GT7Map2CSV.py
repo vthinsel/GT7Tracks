@@ -130,7 +130,7 @@ sys.stdout.flush()
 if args.logpackets:
     f1 = open(args.track + '.cap', 'wb')
     f2 = open(args.track + '.raw', 'wb')
-csvfile = open(args.track + '.csv', 'w', newline='')
+csvfile = open("dumps/new/" +args.track + '.csv', 'w', newline='')
 csvwriter = csv.writer(csvfile)
 
 pktid = 0
