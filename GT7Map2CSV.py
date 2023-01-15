@@ -157,7 +157,7 @@ while True:
         ddata = salsa20_dec(data)
         telemetry = GTDataPacket(ddata[0:296])
         if len(ddata) > 0 and telemetry.pkt_id > pktid:
-            x, z, y = telemetry.position_x, telemetry.position_z, telemetry.position_y
+            x, z, y, orientation, rotx, rotz, roty = telemetry.position_x, telemetry.position_z, telemetry.position_y, telemetry.northorientation, telemetry.rotation_x, telemetry.rotation_z, telemetry.rotation_y
             if px is None:
                 px, pz, py = x, z, y
                 continue
@@ -177,11 +177,10 @@ while True:
             pktid = telemetry.pkt_id
             if csvheader:
                 # csvwriter.writerow(telemetry.__dict__.keys())
-                csvwriter.writerow(["track_id", "x", "z", "y", "speed", "rpm"])
+                csvwriter.writerow(["track_id", "x", "z", "y", "orientation", "rotation_x", "rotation_z", "rotation_y", "speed", "rpm"])
                 csvheader = False
             csvwriter.writerow(
-                [args.track, telemetry.position_x, telemetry.position_z, telemetry.position_y, telemetry.speed,
-                 telemetry.rpm])
+                [args.track, x, z, y, telemetry.speed, telemetry.rpm, orientation, rotx, rotz, roty])
             carSpeed = telemetry.speed
             printAt('{:5.0f}'.format(telemetry.car_code), 3, 36, reverse=1)  # car id
             printAt('{:3.0f}'.format(telemetry.throttle / 2.55), 5, 11)  # throttle
@@ -189,8 +188,8 @@ while True:
             printAt('{:7.1f}'.format(carSpeed * 3.6), 5, 47)  # speed kph
             printAt('{:>10}'.format(pktid), 3, 50, reverse=1)  # packet id
             printAt('{:4.1f}'.format(telemetry.position_x), 4, 4)  # X
-            printAt('{:4.1f}'.format(telemetry.position_y), 4, 14)  # X
-            printAt('{:4.1f}'.format(telemetry.position_z), 4, 24)  # X
+            printAt('{:4.1f}'.format(telemetry.position_z), 4, 14)  # Z
+            printAt('{:4.1f}'.format(telemetry.position_y), 4, 24)  # Y
 
         if pknt > 100:
             send_hb(s)
