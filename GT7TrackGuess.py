@@ -106,7 +106,7 @@ while True:
             pktid = telemetry.pkt_id
             send_hb(s)
             pknt = 0
-            coord = [[telemetry.position_x, telemetry.position_z, telemetry.position_y]]
+            data = [[telemetry.position_x, telemetry.position_z, telemetry.position_y, telemetry.northorientation, telemetry.rotation_x, telemetry.rotation_z, telemetry.rotation_y]]
             #print(f"Coord: {coord}")
             # x, z, y = telemetry.position_x, telemetry.position_z, telemetry.position_y
             # if px is None: =
@@ -118,7 +118,7 @@ while True:
             # plt.gca().set_aspect('equal', adjustable='box')
             # plt.pause(0.00000000000000000001)
             #px, pz, py = x, z, y
-            res = model.predict(coord, verbose=0)
+            res = model.predict(data, verbose=0)
             for row in res:
                 track_confidence.loc[len(track_confidence.index)] = row
                 track_mean = track_confidence.mean(axis=0)
@@ -126,6 +126,7 @@ while True:
                 updated_track_score = track_mean.max()
                 if candidate_track != updated_candidate_track:
                     candidate_track = updated_candidate_track
+                    print(f"Tracks mean confidence: {track_mean*100:.2f}%")
                     print(f"Track candidate : {candidate_track} with confidence {(track_mean.max() * 100):.1f}% ")
                 if updated_track_score > track_score:
                     track_score = updated_track_score
