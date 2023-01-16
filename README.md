@@ -27,12 +27,12 @@ options:
                         Optionnaly log packets for future playback using https://git
                         hub.com/vthinsel/Python_UDP_Receiver/UDPSend_timed.py
                         .Default is False
+  --folder FOLDER       folder to store the track dumps
   --track TRACK         Track ID as per https://github.com/ddm999/gt7info/blob/web-
                         new/_data/db/course.csv
 ```
 
 The dumps directory of this repository contains csv files with track ID as the name.
-
 More information can also be found on the great GTPlanet forum from [here](https://www.gtplanet.net/forum/threads/gt7-is-compatible-with-motion-rig.410728/post-13917994) 
 
 ## Training the model

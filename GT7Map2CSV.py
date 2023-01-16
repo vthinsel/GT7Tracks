@@ -43,14 +43,27 @@ parser.add_argument("--ps_ip",
 
 parser.add_argument("--logpackets",
                     type=bool,
-                    default=False,
+                    default=True,
                     help="Optionnaly log packets for future playback using https://github.com/vthinsel/Python_UDP_Receiver/UDPSend_timed.py .Default is False")
+
+parser.add_argument("--folder",
+                    required=False,
+                    type=str,
+                    default="dumps",
+                    help="folder to store the track dumps")
 
 parser.add_argument("--track",
                     required=True,
                     type=str,
                     default="",
                     help="Track ID as per https://github.com/ddm999/gt7info/blob/web-new/_data/db/course.csv")
+
+parser.add_argument("--plot",
+                    required=False,
+                    type=str,
+                    default=False,
+                    help="Display realtime plot. This will add some latency.")
+
 
 args = parser.parse_args()
 
@@ -105,12 +118,13 @@ def printAt(str, row=1, column=1, bold=0, underline=0, reverse=0):
 # start by sending heartbeat to wake-up GT7 telemetry stack
 send_hb(s)
 # setup the plot styling
-plt.ion()  # allows us to continue to update the plot
-fig, ax = plt.subplots(figsize=(8, 8))
-ax.axis('off')  # hides the black border around the axis.
-plt.xticks([])
-plt.yticks([])
-px, pz, py = None, None, None
+if args.plot:
+    plt.ion()  # allows us to continue to update the plot
+    fig, ax = plt.subplots(figsize=(8, 8))
+    ax.axis('off')  # hides the black border around the axis.
+    plt.xticks([])
+    plt.yticks([])
+    px, pz, py = None, None, None
 
 printAt('GT7 Track Recorder 1.0 (ctrl-c to quit)', 1, 1, bold=1)
 printAt('Packet ID:', 3, 40)
@@ -128,9 +142,9 @@ sys.stdout.flush()
 
 # Create output files if needed
 if args.logpackets:
-    f1 = open(args.track + '.cap', 'wb')
-    f2 = open(args.track + '.raw', 'wb')
-csvfile = open(args.track + '.csv', 'w', newline='')
+    f1 = open(args.folder+'\\'+args.track + '.cap', 'wb')
+    f2 = open(args.folder+'\\'+args.track + '.raw', 'wb')
+csvfile = open(args.folder+'\\'+ args.track + '.csv', 'w', newline='')
 csvwriter = csv.writer(csvfile)
 
 pktid = 0
@@ -158,26 +172,27 @@ while True:
         telemetry = GTDataPacket(ddata[0:296])
         if len(ddata) > 0 and telemetry.pkt_id > pktid:
             x, z, y, orientation, rotx, rotz, roty = telemetry.position_x, telemetry.position_z, telemetry.position_y, telemetry.northorientation, telemetry.rotation_x, telemetry.rotation_z, telemetry.rotation_y
-            if px is None:
+            if args.plot:
+                if px is None:
+                    px, pz, py = x, z, y
+                    continue
+                # here we're getting the ratio of how fast the car's going compared to it's max speed.
+                # we're multiplying by 3 to boost the colorization range.
+                speed = min(1, telemetry.speed / telemetry.calculated_max_speed) * 3
+                # Now use the "speed" ratio to select the color from the Matplotlib pallet
+                color = plt.cm.plasma(speed)
+                # plot the current step
+                plt.plot([px, x], [pz, z], color=color)
+                # set the aspect ratios to be equal for x/z axis, this way the map doesn't look skewed
+                plt.gca().set_aspect('equal', adjustable='box')
+                # pause for a freakishly shot amount of time. We need a pause so that it'll trigger a graph update
+                plt.pause(0.00000000000000000001)
+                # set the previous (x, z) to the current (x, z)
                 px, pz, py = x, z, y
-                continue
-            # here we're getting the ratio of how fast the car's going compared to it's max speed.
-            # we're multiplying by 3 to boost the colorization range.
-            speed = min(1, telemetry.speed / telemetry.calculated_max_speed) * 3
-            # Now use the "speed" ratio to select the color from the Matplotlib pallet
-            color = plt.cm.plasma(speed)
-            # plot the current step
-            plt.plot([px, x], [pz, z], color=color)
-            # set the aspect ratios to be equal for x/z axis, this way the map doesn't look skewed
-            plt.gca().set_aspect('equal', adjustable='box')
-            # pause for a freakishly shot amount of time. We need a pause so that it'll trigger a graph update
-            plt.pause(0.00000000000000000001)
-            # set the previous (x, z) to the current (x, z)
-            px, pz, py = x, z, y
             pktid = telemetry.pkt_id
             if csvheader:
                 # csvwriter.writerow(telemetry.__dict__.keys())
-                csvwriter.writerow(["track_id", "x", "z", "y", "orientation", "rotation_x", "rotation_z", "rotation_y", "speed", "rpm"])
+                csvwriter.writerow(["track_id", "x", "z", "y", "speed", "rpm", "orientation", "rotation_x", "rotation_z", "rotation_y"])
                 csvheader = False
             csvwriter.writerow(
                 [args.track, x, z, y, telemetry.speed, telemetry.rpm, orientation, rotx, rotz, roty])
